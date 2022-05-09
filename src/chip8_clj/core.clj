@@ -10,13 +10,6 @@
         first-byte (Byte/toUnsignedInt (get-in chip8 [:memory pc]))
         second-byte (Byte/toUnsignedInt (get-in chip8 [:memory (inc pc)]))
         opcode (bit-or (bit-shift-left first-byte 8) second-byte)]
-       (println
-        (type first-byte)
-        (type second-byte)
-        (type opcode)
-        (Long/toBinaryString first-byte)
-        (Long/toBinaryString second-byte)
-        (Long/toBinaryString opcode))
        opcode))
 
 (defn decode
@@ -51,16 +44,5 @@
                        (machine/load-cartdridge (vec ary)))]
             (loop [chip8 chip8] (recur (tick chip8))))))
 
-(-main "resources/roms/test_opcode.ch8")
-(-main "resources/roms/ibm_logo.ch8")
-
-
-(def ibmchip8
-  (let [f (java.io.File. "resources/roms/ibm_logo.ch8")
-        ary (byte-array (.length f))
-        is (java.io.FileInputStream. f)]
-       (.read is ary)
-       (.close is)
-       (let [chip8 (-> (machine/new-chip8)
-                       (machine/load-cartdridge (vec ary)))]
-            chip8)))
+;; (-main "resources/roms/test_opcode.ch8")
+;; (-main "resources/roms/ibm_logo.ch8")
