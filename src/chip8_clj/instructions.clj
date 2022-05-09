@@ -1,9 +1,9 @@
-(ns chip8-clj.instructions)
-
+(ns chip8-clj.instructions
+  (:require [chip8-clj.machine :as machine]))
 
 (defn clear-screen
   [chip8 _]
-  (assoc chip8 :screen (vec (repeat (* 64 32) 0))))
+  (assoc chip8 :screen (vec (repeat (* machine/screen-size-x machine/screen-size-y) 0))))
 
 (defn jump
   "1NNN Set PC to NNN"
@@ -33,4 +33,29 @@
        (assoc chip8 :I operand)))
 
 (defn draw
-  [chip8 opcode])
+  "DXYN: Draw N pixel tall sprite from memory location I
+  into screen coordinates V[X], V[Y]"
+  [chip8 opcode]
+  (let [{I :I memory :memory v :v} chip8
+        x (-> opcode (bit-and 0x0F00) (bit-shift-right 8))
+        y (-> opcode (bit-and 0x00F0) (bit-shift-right 4))
+        n (-> opcode (bit-and 0x000F))
+        screen-x (rem (get v x) machine/screen-size-x)
+        screen-y (rem (get v y) machine/screen-size-x)]
+       (loop [chip8 chip8
+              i 0]
+         (if
+           (>= i n) chip8
+           (do
+             (let [sprite (get-in chip8 [:memory (+ I i)])
+                   _ (println screen-x screen-y)
+                   chip8 (update-in chip8 [:screen screen-x (+ screen-y i)] #(bit-xor % sprite))]
+                  (recur chip8 (inc i))))))))
+
+;
+; start := I
+; for i := 0; i < n; i++ {
+;   take memory at memory[I+i]
+;   XOR with screen at screenX,screenY+i
+;   if memory[I+i] AND pixel > 0, set V[0xF]
+; }
